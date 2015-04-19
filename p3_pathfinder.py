@@ -14,6 +14,11 @@ def find_path(src, dest, mesh):
                 dest_box = box
                 print 'Destination in box ' + str(dest_box)
 
+    """Straight line on print-out"""
+    path.append((src, dest))
+
+
+
     return path, visited
 
 __author__ = 'Alec'
