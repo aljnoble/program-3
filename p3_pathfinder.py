@@ -32,7 +32,8 @@ def find_path(src, dest, mesh):
     
     #path, visited = bfs(src, dest, mesh, adj_boxes)
     #path, visited = dijkstras_shortest_path(src, dest, mesh, adj_boxes)
-    path, visited = a_star(src, dest, mesh, adj_boxes, euclidean_distance)
+    #path, visited = a_star(src, dest, mesh, adj_boxes, euclidean_distance)
+    path, visited = bidirectional_a_star(src, dest, mesh, adj_boxes, euclidean_distance)
     
     if path == []:
         print("No path")
@@ -203,6 +204,89 @@ def a_star(source, destination, graph, adj, heuristic):
             path.append((detail_points[node], detail_points[prev[node]]))
             node = prev[node]
         path.append((detail_points[dest_box], destination))
+        path.reverse()
+        return path, visited
+    else:
+        return [], visited
+
+        
+def bidirectional_a_star(source, destination, graph, adj, heuristic):
+    src_box = dest_box = None
+	
+    for box in graph['boxes']:
+        if source[0] in range(box[0], box[1]):
+            if source[1] in range(box[2], box[3]):
+                src_box = box
+        if destination[0] in range(box[0], box[1]):
+            if destination[1] in range(box[2], box[3]):
+                dest_box = box
+                
+    forward_dist = {}
+    backward_dist = {}
+    forward_prev = {}
+    backward_prev = {}
+    detail_points = {} #don't need to duplicate this one since each node will only be found by one search
+
+    queue = [(0, src_box, 'dest'), (0, dest_box, 'src')]
+    forward_dist[src_box] = 0
+    backward_dist[dest_box] = 0
+    forward_prev[src_box] = None
+    backward_prev[dest_box] = None
+    detail_points[src_box] = source
+    detail_points[dest_box] = destination
+    
+    while queue:
+        p, node, goal = heappop(queue)
+        
+        current_dest = dest_box
+        current_dist = forward_dist
+        current_prev = forward_prev
+        other_prev = backward_prev
+        if goal == 'src':
+            current_dest = src_box
+            current_dist = backward_dist
+            current_prev = backward_prev
+            other_prev = forward_prev
+        
+        if (node in other_prev):
+            break;
+        
+        neighbors = adj(graph, node)
+        
+        for next in neighbors:
+            constrained_x = max(min(detail_points[node][0], next[1]), next[0])
+            constrained_y = max(min(detail_points[node][1], next[3]), next[2])
+            next_point = (constrained_x, constrained_y)
+            next_dist = euclidean_distance(next_point, detail_points[node])
+            remaining_estimate = heuristic(next_point, current_dest)
+            new_cost = current_dist[node] + next_dist
+            
+            if next not in current_prev or new_cost < current_dist[next]:
+                current_prev[next] = node
+                current_dist[next] = new_cost
+                detail_points[next] = next_point
+                heappush(queue, (current_dist[next] + remaining_estimate, next, goal))
+
+    visited = []
+    for n in forward_prev:
+        visited.append(n)
+    for n in backward_prev: #will probably duplicate 1 box
+        visited.append(n)
+        
+    if node in forward_prev and node in backward_prev:
+        path = []
+        
+        current_node = node
+        while forward_prev[current_node]:
+            path.append((detail_points[current_node], detail_points[forward_prev[current_node]]))
+            current_node = forward_prev[current_node]
+        
+        current_node = node
+        while backward_prev[current_node]:
+            path.append((detail_points[current_node], detail_points[backward_prev[current_node]]))
+            current_node = backward_prev[current_node]
+        
+        #path.append((detail_points[dest_box], destination))
         path.reverse()
         return path, visited
     else:
