@@ -29,7 +29,7 @@ def find_path(src, dest, mesh):
 	    visited.append(dest_box)
     """
     
-    path, visited = bfs(src_box, dest_box, mesh, adj_boxes)
+    path, visited = bfs(src, dest, mesh, adj_boxes)
     
     if path == []:
         print("No path")
@@ -38,37 +38,53 @@ def find_path(src, dest, mesh):
 
 
 def bfs(source, destination, graph, adj):
-    prev = {}
+    src_box = dest_box = None
+	
+    for box in graph['boxes']:
+        if source[0] in range(box[0], box[1]):
+            if source[1] in range(box[2], box[3]):
+                src_box = box
+        if destination[0] in range(box[0], box[1]):
+            if destination[1] in range(box[2], box[3]):
+                dest_box = box
 
-    queue = [source]
-    prev[source] = None
+    prev = {}
+    detail_points = {}
+
+    queue = [src_box]
+    prev[src_box] = None
+    detail_points[src_box] = source
 
     while queue:
         node = heappop(queue)
         
-        if (node == destination):
+        if (node == dest_box):
             break;
         
         neighbors = adj(graph, node)
         
         for next in neighbors:
-            next_node = next
-            
-            if next_node not in prev:
-                prev[next_node] = node
-                heappush(queue, next_node)
+            if next not in prev:
+                prev[next] = node
+                constrained_x = max(min(detail_points[node][0], next[1]), next[0])
+                constrained_y = max(min(detail_points[node][1], next[3]), next[2])
+                detail_points[next] = (constrained_x, constrained_y)
+                heappush(queue, next)
 
     visited = []
     for n in prev:
         visited.append(n)
     
-    if node == destination:
+    if node == dest_box:
         path = []
         while prev[node]:
+            """
             box_center = ((node[1] + node[0])//2, (node[3] + node[2])//2)
             prev_center = ((prev[node][1] + prev[node][0])//2, (prev[node][3] + prev[node][2])//2)
-            path.append((box_center, prev_center))
+            """
+            path.append((detail_points[node], detail_points[prev[node]]))
             node = prev[node]
+        path.append((detail_points[dest_box], destination))
         path.reverse()
         
         return path, visited
