@@ -6,6 +6,7 @@ def find_path(src, dest, mesh):
     path = []
     visited = []
     
+    """
     src_box = dest_box = None
 	
     for box in mesh['boxes']:
@@ -18,7 +19,7 @@ def find_path(src, dest, mesh):
             if dest[1] in range(box[2], box[3]):
                 dest_box = box
                 print 'Destination in box ' + str(dest_box)
-
+    """
 
     """Straight line on print-out"""
     """
@@ -52,6 +53,14 @@ def bfs(source, destination, graph, adj):
             if destination[1] in range(box[2], box[3]):
                 dest_box = box
 
+    if src_box == None or dest_box == None:
+        visited = []
+        if (src_box != None):
+            visited.append(src_box)
+        if (dest_box != None):
+            visited.append(dest_box)
+        return [], visited
+        
     prev = {}
     detail_points = {}
 
@@ -107,6 +116,14 @@ def dijkstras_shortest_path(source, destination, graph, adj):
             if destination[1] in range(box[2], box[3]):
                 dest_box = box
                 
+    if src_box == None or dest_box == None:
+        visited = []
+        if (src_box != None):
+            visited.append(src_box)
+        if (dest_box != None):
+            visited.append(dest_box)
+        return [], visited
+        
     dist = {}
     prev = {}
     detail_points = {}
@@ -162,7 +179,15 @@ def a_star(source, destination, graph, adj, heuristic):
         if destination[0] in range(box[0], box[1]):
             if destination[1] in range(box[2], box[3]):
                 dest_box = box
-                
+    
+    if src_box == None or dest_box == None:
+        visited = []
+        if (src_box != None):
+            visited.append(src_box)
+        if (dest_box != None):
+            visited.append(dest_box)
+        return [], visited
+    
     dist = {}
     prev = {}
     detail_points = {}
@@ -221,6 +246,14 @@ def bidirectional_a_star(source, destination, graph, adj, heuristic):
             if destination[1] in range(box[2], box[3]):
                 dest_box = box
                 
+    if src_box == None or dest_box == None:
+        visited = []
+        if (src_box != None):
+            visited.append(src_box)
+        if (dest_box != None):
+            visited.append(dest_box)
+        return [], visited
+    
     forward_dist = {}
     backward_dist = {}
     forward_prev = {}
