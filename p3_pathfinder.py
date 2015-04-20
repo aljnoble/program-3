@@ -1,4 +1,5 @@
 from heapq import heappush, heappop
+from math import sqrt
 
 def find_path(src, dest, mesh):
 
@@ -29,7 +30,7 @@ def find_path(src, dest, mesh):
 	    visited.append(dest_box)
     """
     
-    path, visited = bfs(src, dest, mesh, adj_boxes)
+    path, visited = dijkstras_shortest_path(src, dest, mesh, adj_boxes)
     
     if path == []:
         print("No path")
@@ -93,39 +94,61 @@ def bfs(source, destination, graph, adj):
     
     
 def dijkstras_shortest_path(source, destination, graph, adj):
+    src_box = dest_box = None
+	
+    for box in graph['boxes']:
+        if source[0] in range(box[0], box[1]):
+            if source[1] in range(box[2], box[3]):
+                src_box = box
+        if destination[0] in range(box[0], box[1]):
+            if destination[1] in range(box[2], box[3]):
+                dest_box = box
+                
     dist = {}
     prev = {}
+    detail_points = {}
 
-    queue = [(0, source)]
-    dist[source] = 0
-    prev[source] = None
+    queue = [(0, src_box)]
+    dist[src_box] = 0
+    prev[src_box] = None
+    detail_points[src_box] = source
 
     while queue:
         d, node = heappop(queue)
         
-        if (node == destination):
+        if (node == dest_box):
             break;
         
         neighbors = adj(graph, node)
         
         for next in neighbors:
-            next_dist, next_node = next
+            constrained_x = max(min(detail_points[node][0], next[1]), next[0])
+            constrained_y = max(min(detail_points[node][1], next[3]), next[2])
+            dx = constrained_x - detail_points[node][0]
+            dy = constrained_y - detail_points[node][1]
+            next_dist = sqrt(dx*dx+dy*dy)
             new_cost = dist[node] + next_dist
             
-            if next_node not in prev or new_cost < dist[next_node]:
-                prev[next_node] = node
-                dist[next_node] = new_cost
-                heappush(queue, (dist[next_node], next_node))
+            if next not in prev or new_cost < dist[next]:
+                prev[next] = node
+                dist[next] = new_cost
+                detail_points[next] = (constrained_x, constrained_y)
+                heappush(queue, (dist[next], next))
 
-    if node == destination:
+    visited = []
+    for n in prev:
+        visited.append(n)
+        
+    if node == dest_box:
         path = []
-        while node:
-            path.append(node)
+        while prev[node]:
+            path.append((detail_points[node], detail_points[prev[node]]))
             node = prev[node]
+        path.append((detail_points[dest_box], destination))
         path.reverse()
-        return path
+        return path, visited
     else:
-        return None
+        return [], visited
 
 
 def adj_boxes(mesh, box):
