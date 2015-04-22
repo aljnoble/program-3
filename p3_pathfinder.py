@@ -302,7 +302,7 @@ def bidirectional_a_star(source, destination, graph, adj, heuristic):
     for n in backward_prev:  # will probably duplicate 1 box
         visited.append(n)
 
-    if node in forward_prev and node in backward_prev:
+    if (node in forward_prev and node in backward_prev) or (node in forward_prev is node in backward_prev):
         path = []
 
         current_node = node
